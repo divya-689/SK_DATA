@@ -690,9 +690,18 @@ export const PropertiesPanel: React.FC = () => {
                             }}
                             placeholder="Type {{ to see available APIs and queries"
                           />
-                          <p className="text-xs text-gray-400 mt-1">
-                            💡 Type <code className="bg-gray-700 px-1 rounded">{'{{'}</code> for autocomplete • Format: <code className="bg-gray-700 px-1 rounded">[{'{'}x: "label", y: value{'}'}]</code>
-                          </p>
+                          <div className="bg-gray-700 p-2 rounded mt-2 text-xs space-y-1">
+                            <p className="text-green-400 font-medium">💡 Quick Tips:</p>
+                            <p className="text-gray-300">• Type <code className="bg-gray-800 px-1 rounded">{'{{'}</code> for autocomplete</p>
+                            <p className="text-gray-300">• Format: <code className="bg-gray-800 px-1 rounded">{`[{x: "label", y: value}]`}</code></p>
+                            <p className="text-gray-300">• Example: <code className="bg-gray-800 px-1 rounded text-[10px]">{`{{getUsersAPI.data}}`}</code></p>
+                            {apis.length === 0 && (
+                              <p className="text-orange-400 mt-2">⚠ No APIs created yet. Go to APIs panel to create one.</p>
+                            )}
+                            {apis.length > 0 && apis.every(a => !a.response) && (
+                              <p className="text-orange-400 mt-2">⚠ APIs not executed. Click the Run button next to each API.</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

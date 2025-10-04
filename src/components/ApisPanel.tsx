@@ -178,13 +178,36 @@ export const ApisPanel: React.FC = () => {
       {apis.length === 0 && (
         <div className="text-center py-8 text-gray-400">
           <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No APIs yet</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="text-blue-400 hover:text-blue-300 text-sm mt-1"
-          >
-            Create your first API
-          </button>
+          <p className="text-sm mb-3">No APIs yet</p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="text-blue-400 hover:text-blue-300 text-sm"
+            >
+              Create your first API
+            </button>
+            <button
+              onClick={() => {
+                const demoApi = {
+                  id: 'getUsersAPI',
+                  name: 'Get Users Demo',
+                  method: 'GET' as const,
+                  url: 'https://reqres.in/api/users',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  authentication: {
+                    type: 'none' as const
+                  }
+                };
+                addApi(demoApi);
+                runApi('getUsersAPI');
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+            >
+              Setup Demo API
+            </button>
+          </div>
         </div>
       )}
     </div>

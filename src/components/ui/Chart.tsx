@@ -166,23 +166,58 @@ export const Chart: React.FC<ChartComponentProps> = ({ component }) => {
 
     if (evaluatedSeries.length === 0 || evaluatedSeries.every(s => s.data.length === 0)) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500">
-          <div className="text-center">
-            <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No data available</p>
-            <p className="text-sm mt-1">Bind data using the properties panel</p>
+        <div className="flex items-center justify-center h-full text-gray-500 p-6">
+          <div className="text-center max-w-lg">
+            <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No Chart Data</h3>
+            <p className="text-sm mb-4">Follow these steps to visualize your data:</p>
+
+            <div className="bg-gray-50 rounded-lg p-4 text-left space-y-3 mb-4">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-800">Create or Run an API</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Go to APIs panel and create an API, or click "Setup Demo API"</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-800">Bind Data in Properties</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Select this chart, open Properties → Data → Chart series</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-800">Type {'{{'} to see autocomplete</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Example: <code className="bg-gray-200 px-1 rounded text-xs">{`{{apiName.data.map(item => ({x: item.label, y: item.value}))}}`}</code></p>
+                </div>
+              </div>
+            </div>
+
             {props.series.length > 0 && (
-              <div className="mt-3 text-xs text-left max-w-md mx-auto">
-                <p className="font-semibold mb-1">Debug Info:</p>
-                <div className="bg-gray-800 p-2 rounded text-left overflow-auto max-h-32">
-                  <p>Series configured: {props.series.length}</p>
+              <div className="mt-4 text-xs text-left">
+                <p className="font-semibold mb-2 text-gray-700">Debug Info:</p>
+                <div className="bg-gray-100 p-3 rounded text-left overflow-auto max-h-40 border border-gray-300">
+                  <p className="mb-1"><span className="font-medium">Series configured:</span> {props.series.length}</p>
                   {props.series.map((s, idx) => (
-                    <p key={idx} className="truncate">Series {idx + 1}: {s.data?.substring(0, 50)}...</p>
+                    <p key={idx} className="truncate mb-1">
+                      <span className="font-medium">Series {idx + 1}:</span> {s.data?.substring(0, 60) || '(empty)'}...
+                    </p>
                   ))}
-                  <p className="mt-1">APIs available: {apis.length}</p>
-                  {apis.map((api, idx) => (
-                    <p key={idx} className="text-blue-400">- {api.id}: {api.response ? 'Has data' : 'No data'}</p>
-                  ))}
+                  <p className="mt-2 mb-1"><span className="font-medium">APIs available:</span> {apis.length}</p>
+                  {apis.length === 0 ? (
+                    <p className="text-orange-600">⚠ No APIs created yet</p>
+                  ) : (
+                    apis.map((api, idx) => (
+                      <p key={idx} className={api.response ? 'text-green-600' : 'text-orange-600'}>
+                        {api.response ? '✓' : '⚠'} {api.id}: {api.response ? 'Has data' : 'No data - Click Run button'}
+                      </p>
+                    ))
+                  )}
                 </div>
               </div>
             )}
