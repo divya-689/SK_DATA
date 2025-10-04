@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Plus, Globe, Play, MoreVertical, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Globe, Play, MoreVertical, CreditCard as Edit2, Trash2 } from 'lucide-react';
 import { nanoid } from 'nanoid';
 
 const methodColors = {
