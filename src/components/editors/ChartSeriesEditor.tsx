@@ -18,7 +18,7 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
 
     // Register completion provider for autocomplete
     monacoInstance.languages.registerCompletionItemProvider('javascript', {
-      triggerCharacters: ['{', '.'],
+      triggerCharacters: ['{', '.', '['],
       provideCompletionItems: (model, position) => {
         const textUntilPosition = model.getValueInRange({
           startLineNumber: position.lineNumber,
@@ -37,12 +37,13 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
           if (!afterBraces.includes('.')) {
             // Suggest APIs
             apis.forEach(api => {
+              const hasData = api.response?.body || api.response;
               suggestions.push({
                 label: api.id,
                 kind: monacoInstance.languages.CompletionItemKind.Variable,
                 insertText: api.id,
                 detail: `API: ${api.name}`,
-                documentation: `${api.method} ${api.url}`,
+                documentation: `${api.method} ${api.url}\n${hasData ? '✓ Has data' : '⚠ No data yet - Run API first'}`,
                 range: {
                   startLineNumber: position.lineNumber,
                   startColumn: position.column - afterBraces.length,
@@ -54,12 +55,13 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
 
             // Suggest SQL Queries
             sqlQueries.forEach(query => {
+              const hasData = query.result && query.result.length > 0;
               suggestions.push({
                 label: query.id,
                 kind: monacoInstance.languages.CompletionItemKind.Variable,
                 insertText: query.id,
                 detail: `Query: ${query.name}`,
-                documentation: query.query,
+                documentation: `${query.query}\n${hasData ? '✓ Has data' : '⚠ No data yet - Run query first'}`,
                 range: {
                   startLineNumber: position.lineNumber,
                   startColumn: position.column - afterBraces.length,
@@ -123,27 +125,39 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
             const arrayMethods = [
               {
                 label: 'map',
-                insertText: 'map(item => ({ x: item., y: item. }))',
+                insertText: 'map(item => ({ x: item.${1:label}, y: item.${2:value} }))',
                 detail: 'Transform array',
                 documentation: 'Transform each item in the array to chart format {x, y}',
               },
               {
                 label: 'filter',
-                insertText: 'filter(item => item.)',
+                insertText: 'filter(item => item.${1:field} ${2:===} ${3:value})',
                 detail: 'Filter array',
                 documentation: 'Filter items based on a condition',
               },
               {
                 label: 'slice',
-                insertText: 'slice(0, 10)',
+                insertText: 'slice(${1:0}, ${2:10})',
                 detail: 'Get subset',
                 documentation: 'Get a portion of the array',
               },
               {
                 label: 'sort',
-                insertText: 'sort((a, b) => a. - b.)',
+                insertText: 'sort((a, b) => ${1:b.value - a.value})',
                 detail: 'Sort array',
                 documentation: 'Sort items in the array',
+              },
+              {
+                label: 'reduce',
+                insertText: 'reduce((acc, item) => { acc[item.${1:key}] = (acc[item.${1:key}] || 0) + item.${2:value}; return acc; }, {})',
+                detail: 'Reduce/Aggregate',
+                documentation: 'Aggregate array values into a single result',
+              },
+              {
+                label: 'find',
+                insertText: 'find(item => item.${1:id} === ${2:value})',
+                detail: 'Find item',
+                documentation: 'Find first matching item',
               },
             ];
 
@@ -180,6 +194,24 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
               insertText: '{{${1:apiName}.data.map(item => ({ x: new Date(item.${2:timestamp}).toLocaleDateString(), y: item.${3:value} }))}}',
               detail: 'Chart with formatted dates',
               documentation: 'Transform timestamp data to readable dates',
+            },
+            {
+              label: 'Filter and map data',
+              insertText: '{{${1:apiName}.data.filter(item => item.${2:status} === \"${3:active}\").map(item => ({ x: item.${4:name}, y: item.${5:count} }))}}',
+              detail: 'Filter then map',
+              documentation: 'Filter data before charting',
+            },
+            {
+              label: 'Top N items',
+              insertText: '{{${1:apiName}.data.sort((a, b) => b.${2:value} - a.${2:value}).slice(0, ${3:10}).map(item => ({ x: item.${4:name}, y: item.${2:value} }))}}',
+              detail: 'Sort and limit',
+              documentation: 'Show top N values',
+            },
+            {
+              label: 'Group and sum by category',
+              insertText: '{{Object.entries(${1:apiName}.data.reduce((acc, item) => { const key = item.${2:category}; acc[key] = (acc[key] || 0) + item.${3:value}; return acc; }, {})).map(([x, y]) => ({ x, y }))}}',
+              detail: 'Aggregate by category',
+              documentation: 'Group and sum values by category',
             },
             {
               label: 'Simple static data',
@@ -221,22 +253,24 @@ export const ChartSeriesEditor: React.FC<ChartSeriesEditorProps> = ({ value, onC
 
         const api = apis.find(a => a.id === word.word);
         if (api) {
+          const hasData = api.response?.body || api.response;
           return {
             contents: [
               { value: `**API: ${api.name}**` },
               { value: `\`${api.method} ${api.url}\`` },
-              { value: api.response ? '✓ Has data' : '⚠ No data yet' },
+              { value: hasData ? '✓ Has data' : '⚠ No data yet - Run API first' },
             ],
           };
         }
 
         const query = sqlQueries.find(q => q.id === word.word);
         if (query) {
+          const hasData = query.result && query.result.length > 0;
           return {
             contents: [
               { value: `**Query: ${query.name}**` },
               { value: `\`\`\`sql\n${query.query}\n\`\`\`` },
-              { value: query.result ? '✓ Has data' : '⚠ No data yet' },
+              { value: hasData ? '✓ Has data' : '⚠ No data yet - Run query first' },
             ],
           };
         }
