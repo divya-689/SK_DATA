@@ -69,8 +69,25 @@ export const Chart: React.FC<ChartComponentProps> = ({ component }) => {
       try {
         if (s.data && typeof s.data === 'string') {
           console.log('Chart: Evaluating series data:', s.data);
-          const result = evaluateExpression(s.data, context);
-          console.log('Chart: Evaluated result:', result);
+
+          // Try to parse as JSON first (for static data like [{x:"a",y:1}])
+          let result: any;
+          const trimmed = s.data.trim();
+
+          if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+            try {
+              result = JSON.parse(trimmed);
+              console.log('Chart: Parsed as JSON:', result);
+            } catch (jsonError) {
+              // Not valid JSON, try expression evaluation
+              result = evaluateExpression(s.data, context);
+              console.log('Chart: Evaluated as expression:', result);
+            }
+          } else {
+            // Contains expressions like {{...}}
+            result = evaluateExpression(s.data, context);
+            console.log('Chart: Evaluated result:', result);
+          }
 
           if (Array.isArray(result)) {
             data = result.map((item, idx) => {
@@ -83,6 +100,12 @@ export const Chart: React.FC<ChartComponentProps> = ({ component }) => {
               }
               return { x: idx, y: Number(item) };
             });
+          } else if (typeof result === 'object' && result !== null) {
+            // Handle object format (convert to array)
+            data = Object.entries(result).map(([key, value]) => ({
+              x: key,
+              y: Number(value)
+            }));
           } else {
             console.warn('Chart: Result is not an array:', typeof result, result);
           }
