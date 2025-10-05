@@ -76,12 +76,22 @@ export const Chart: React.FC<ChartComponentProps> = ({ component }) => {
 
           if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
             try {
+              // First try standard JSON
               result = JSON.parse(trimmed);
-              console.log('Chart: Parsed as JSON:', result);
+              console.log('Chart: Parsed as strict JSON:', result);
             } catch (jsonError) {
-              // Not valid JSON, try expression evaluation
-              result = evaluateExpression(s.data, context);
-              console.log('Chart: Evaluated as expression:', result);
+              console.log('Chart: Strict JSON parse failed, trying relaxed JSON');
+              try {
+                // Try parsing with unquoted keys (JavaScript object notation)
+                const relaxedJson = trimmed.replace(/(\{|,)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+                result = JSON.parse(relaxedJson);
+                console.log('Chart: Parsed as relaxed JSON:', result);
+              } catch (relaxedError) {
+                console.log('Chart: Relaxed JSON failed, trying expression evaluation');
+                // Not valid JSON, try expression evaluation
+                result = evaluateExpression(s.data, context);
+                console.log('Chart: Evaluated as expression:', result);
+              }
             }
           } else {
             // Contains expressions like {{...}}
