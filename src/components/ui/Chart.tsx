@@ -83,11 +83,15 @@ export const Chart: React.FC<ChartComponentProps> = ({ component }) => {
               console.log('Chart: Strict JSON parse failed, trying relaxed JSON');
               try {
                 // Try parsing with unquoted keys (JavaScript object notation)
-                const relaxedJson = trimmed.replace(/(\{|,)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
+                // Replace unquoted property names with quoted ones
+                const relaxedJson = trimmed
+                  .replace(/(\{|,)\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":')
+                  .replace(/'/g, '"'); // Also convert single quotes to double quotes
+                console.log('Chart: Trying relaxed JSON:', relaxedJson);
                 result = JSON.parse(relaxedJson);
                 console.log('Chart: Parsed as relaxed JSON:', result);
               } catch (relaxedError) {
-                console.log('Chart: Relaxed JSON failed, trying expression evaluation');
+                console.log('Chart: Relaxed JSON failed, trying expression evaluation', relaxedError);
                 // Not valid JSON, try expression evaluation
                 result = evaluateExpression(s.data, context);
                 console.log('Chart: Evaluated as expression:', result);
